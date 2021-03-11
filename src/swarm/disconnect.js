@@ -27,7 +27,7 @@ module.exports = (common, options) => {
     })
 
     beforeEach(async () => {
-      await ipfsA.swarm.connect(ipfsB.peerId.addresses[0])
+      await ipfsA.swarm.connect(ipfsB.peerId.addresses[0]+'/p2p/'+ipfsB.peerId.id)
     })
 
     after(() => common.clean())
@@ -38,14 +38,14 @@ module.exports = (common, options) => {
       peers = await ipfsA.swarm.peers()
       expect(peers).to.have.length.above(0)
 
-      await ipfsA.swarm.disconnect(ipfsB.peerId.addresses[0])
+      await ipfsA.swarm.disconnect(ipfsB.peerId.addresses[0]+'/p2p/'+ipfsB.peerId.id)
 
       peers = await ipfsA.swarm.peers()
       expect(peers).to.have.length(0)
     })
 
     it('should respect timeout option when disconnecting from a remote peer', () => {
-      return testTimeout(() => ipfsA.swarm.disconnect(ipfsB.peerId.addresses[0], {
+      return testTimeout(() => ipfsA.swarm.disconnect(ipfsB.peerId.addresses[0]+'/p2p/'+ipfsB.peerId.id, {
         timeout: 1
       }))
     })

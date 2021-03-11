@@ -27,8 +27,8 @@ module.exports = (common, options) => {
       nodeB = (await common.spawn()).api
       nodeC = (await common.spawn()).api
       await Promise.all([
-        nodeB.swarm.connect(nodeA.peerId.addresses[0]),
-        nodeC.swarm.connect(nodeB.peerId.addresses[0])
+        nodeB.swarm.connect(nodeA.peerId.addresses[0]+'/p2p/'+nodeA.peerId.id),
+        nodeC.swarm.connect(nodeB.peerId.addresses[0]+'/p2p/'+nodeB.peerId.id)
       ])
     })
 

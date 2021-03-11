@@ -29,7 +29,7 @@ module.exports = (common, options) => {
       // Add key to the wantlist for ipfsB
       ipfsB.block.get(key).catch(() => { /* is ok, expected on teardown */ })
 
-      await ipfsA.swarm.connect(ipfsB.peerId.addresses[0])
+      await ipfsA.swarm.connect(ipfsB.peerId.addresses[0]+'/p2p/'+ipfsB.peerId.id)
     })
 
     after(() => common.clean())
