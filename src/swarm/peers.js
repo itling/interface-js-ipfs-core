@@ -6,6 +6,7 @@ const CID = require('cids')
 const delay = require('delay')
 const { isBrowser, isWebWorker } = require('ipfs-utils/src/env')
 const { getDescribe, getIt, expect } = require('../utils/mocha')
+const testTimeout = require('../utils/test-timeout')
 
 /** @typedef { import("ipfsd-ctl/src/factory") } Factory */
 /**
@@ -25,13 +26,19 @@ module.exports = (common, options) => {
     before(async () => {
       ipfsA = (await common.spawn()).api
       ipfsB = (await common.spawn({ type: isWebWorker ? 'go' : undefined })).api
-      await ipfsA.swarm.connect(ipfsB.peerId.addresses[0]+"/p2p/"+ipfsB.peerId.id)
+      await ipfsA.swarm.connect(ipfsB.peerId.addresses[0])
       /* TODO: Seen if we still need this after this is fixed
          https://github.com/ipfs/js-ipfs/issues/2601 gets resolved */
       // await delay(60 * 1000) // wait for open streams in the connection available
     })
 
     after(() => common.clean())
+
+    it('should respect timeout option when listing swarm peers', () => {
+      return testTimeout(() => ipfsA.swarm.peers({
+        timeout: 1
+      }))
+    })
 
     it('should list peers this node is connected to', async () => {
       const peers = await ipfsA.swarm.peers()
@@ -89,7 +96,7 @@ module.exports = (common, options) => {
     it('should list peers only once', async () => {
       const nodeA = (await common.spawn()).api
       const nodeB = (await common.spawn({ type: isWebWorker ? 'go' : undefined })).api
-      await nodeA.swarm.connect(nodeB.peerId.addresses[0]+"/p2p/"+nodeB.peerId.id)
+      await nodeA.swarm.connect(nodeB.peerId.addresses[0])
       await delay(1000)
       const peersA = await nodeA.swarm.peers()
       const peersB = await nodeB.swarm.peers()
@@ -137,7 +144,7 @@ module.exports = (common, options) => {
       // TODO: the webrtc-star transport only keeps the last listened on address around
       // so the browser has to use 1 as the array index
       // await nodeA.swarm.connect(nodeB.peerId.addresses[0])
-      await nodeA.swarm.connect(nodeB.peerId.addresses[isBrowser ? 1 : 0]+"/p2p/"+nodeB.peerId.id)
+      await nodeA.swarm.connect(nodeB.peerId.addresses[isBrowser ? 1 : 0])
 
       await delay(1000)
       const peersA = await nodeA.swarm.peers()

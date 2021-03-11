@@ -2,6 +2,7 @@
 'use strict'
 
 const { getDescribe, getIt, expect } = require('../utils/mocha')
+const testTimeout = require('../utils/test-timeout')
 
 /** @typedef { import("ipfsd-ctl/src/factory") } Factory */
 /**
@@ -21,10 +22,18 @@ module.exports = (common, options) => {
     before(async () => {
       nodeA = (await common.spawn()).api
       nodeB = (await common.spawn()).api
-      await nodeB.swarm.connect(nodeA.peerId.addresses[0]+"/p2p/"+nodeA.peerId.id)
+      await nodeB.swarm.connect(nodeA.peerId.addresses[0])
     })
 
     after(() => common.clean())
+
+    it('should respect timeout option when finding a peer on the DHT', async () => {
+      const nodeBId = await nodeB.id()
+
+      await testTimeout(() => nodeA.dht.findPeer(nodeBId.id, {
+        timeout: 1
+      }))
+    })
 
     it('should find other peers', async () => {
       const nodeBId = await nodeB.id()

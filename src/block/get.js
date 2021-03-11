@@ -1,9 +1,10 @@
 /* eslint-env mocha */
 'use strict'
-
-const multihash = require('multihashes')
+const { Buffer } = require('buffer')
+const multihash = require('multihashing-async').multihash
 const CID = require('cids')
 const { getDescribe, getIt, expect } = require('../utils/mocha')
+const testTimeout = require('../utils/test-timeout')
 
 /** @typedef { import("ipfsd-ctl/src/factory") } Factory */
 /**
@@ -25,6 +26,12 @@ module.exports = (common, options) => {
     })
 
     after(() => common.clean())
+
+    it('should respect timeout option when getting a block', () => {
+      return testTimeout(() => ipfs.block.get(new CID('QmPv52ekjS75L4JmHpXVeuJ5uX2ecSfSZo88NSyxwA3rA3'), {
+        timeout: 1
+      }))
+    })
 
     it('should get by CID object', async () => {
       const cid = new CID(hash)
@@ -54,7 +61,7 @@ module.exports = (common, options) => {
     })
 
     it('should get a block added as CIDv0 with a CIDv1', async () => {
-      const input = Buffer.from(`TEST${Date.now()}`)
+      const input = Buffer.from(`TEST${Math.random()}`)
 
       const res = await ipfs.block.put(input, { version: 0 })
 
@@ -68,7 +75,7 @@ module.exports = (common, options) => {
     })
 
     it('should get a block added as CIDv1 with a CIDv0', async () => {
-      const input = Buffer.from(`TEST${Date.now()}`)
+      const input = Buffer.from(`TEST${Math.random()}`)
 
       const res = await ipfs.block.put(input, { version: 1 })
 
@@ -82,10 +89,10 @@ module.exports = (common, options) => {
     })
 
     it('should return an error for an invalid CID', () => {
-      return expect(ipfs.block.get('invalid')).to.eventually.be.rejected
+      return expect(ipfs.block.get('Non-base58 character')).to.eventually.be.rejected
         .and.be.an.instanceOf(Error)
         .and.have.property('message')
-        .that.include('Non-base58 character')
+        .that.includes('Non-base58 character')
     })
   })
 }

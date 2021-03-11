@@ -3,7 +3,9 @@
 
 const { getDescribe, getIt, expect } = require('../utils/mocha')
 const all = require('it-all')
+const drain = require('it-drain')
 const { fakeCid } = require('./utils')
+const testTimeout = require('../utils/test-timeout')
 
 /** @typedef { import("ipfsd-ctl/src/factory") } Factory */
 /**
@@ -25,8 +27,8 @@ module.exports = (common, options) => {
       nodeB = (await common.spawn()).api
       nodeC = (await common.spawn()).api
       await Promise.all([
-        nodeB.swarm.connect(nodeA.peerId.addresses[0]+"/p2p/"+nodeA.peerId.id),
-        nodeC.swarm.connect(nodeB.peerId.addresses[0]+"/p2p/"+nodeB.peerId.id)
+        nodeB.swarm.connect(nodeA.peerId.addresses[0]),
+        nodeC.swarm.connect(nodeB.peerId.addresses[0])
       ])
     })
 
@@ -36,17 +38,24 @@ module.exports = (common, options) => {
     before('add providers for the same cid', async function () {
       this.timeout(10 * 1000)
 
-      const cids = await Promise.all([
-        nodeB.object.new('unixfs-dir'),
-        nodeC.object.new('unixfs-dir')
+      const blob = Buffer.from('blorb')
+      const blocks = await Promise.all([
+        nodeB.block.put(blob),
+        nodeC.block.put(blob)
       ])
 
-      providedCid = cids[0]
+      providedCid = blocks[0].cid
 
       await Promise.all([
         all(nodeB.dht.provide(providedCid)),
         all(nodeC.dht.provide(providedCid))
       ])
+    })
+
+    it('should respect timeout option when finding providers on the DHT', () => {
+      return testTimeout(() => drain(nodeA.dht.findProvs(providedCid, {
+        timeout: 1
+      })))
     })
 
     it('should be able to find providers', async function () {
@@ -67,8 +76,20 @@ module.exports = (common, options) => {
       }
 
       const cidV0 = await fakeCid()
+      const start = Date.now()
+      let res
 
-      await expect(all(nodeA.dht.findProvs(cidV0, options))).to.be.rejected()
+      try {
+        res = await all(nodeA.dht.findProvs(cidV0, options))
+      } catch (err) {
+        // rejected by http client
+        expect(err).to.have.property('name', 'TimeoutError')
+        return
+      }
+
+      // rejected by the server, errors don't work over http - https://github.com/ipfs/js-ipfs/issues/2519
+      expect(res).to.be.an('array').with.lengthOf(0)
+      expect(Date.now() - start).to.be.lessThan(100)
     })
   })
 }

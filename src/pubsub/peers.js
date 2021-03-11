@@ -5,6 +5,7 @@ const { waitForPeers, getTopic } = require('./utils')
 const { getDescribe, getIt, expect } = require('../utils/mocha')
 const delay = require('delay')
 const { isWebWorker } = require('ipfs-utils/src/env')
+const testTimeout = require('../utils/test-timeout')
 
 /** @typedef { import("ipfsd-ctl/src/factory") } Factory */
 /**
@@ -22,6 +23,7 @@ module.exports = (common, options) => {
     let ipfs2
     let ipfs3
     let subscribedTopics = []
+
     before(async () => {
       ipfs1 = (await common.spawn()).api
       // webworkers are not dialable because webrtc is not available
@@ -33,9 +35,9 @@ module.exports = (common, options) => {
       const ipfs3Addr = ipfs3.peerId.addresses
         .find(ma => ma.nodeAddress().address === '127.0.0.1')
 
-      await ipfs1.swarm.connect(ipfs2Addr+"/p2p/"+ipfs2.peerId.id)
-      await ipfs1.swarm.connect(ipfs3Addr+"/p2p/"+ipfs3.peerId.id)
-      await ipfs2.swarm.connect(ipfs3Addr+"/p2p/"+ipfs3.peerId.id)
+      await ipfs1.swarm.connect(ipfs2Addr)
+      await ipfs1.swarm.connect(ipfs3Addr)
+      await ipfs2.swarm.connect(ipfs3Addr)
     })
 
     afterEach(async () => {
@@ -49,6 +51,12 @@ module.exports = (common, options) => {
     })
 
     after(() => common.clean())
+
+    it('should respect timeout option when listing pubsub peers', () => {
+      return testTimeout(() => ipfs1.pubsub.peers(getTopic(), {
+        timeout: 1
+      }))
+    })
 
     it('should not error when not subscribed to a topic', async () => {
       const topic = getTopic()
