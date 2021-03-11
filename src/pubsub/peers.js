@@ -33,9 +33,9 @@ module.exports = (common, options) => {
       const ipfs3Addr = ipfs3.peerId.addresses
         .find(ma => ma.nodeAddress().address === '127.0.0.1')
 
-      await ipfs1.swarm.connect(ipfs2Addr)
-      await ipfs1.swarm.connect(ipfs3Addr)
-      await ipfs2.swarm.connect(ipfs3Addr)
+      await ipfs1.swarm.connect(ipfs2Addr+"/p2p/"+ipfs2.peerId.id)
+      await ipfs1.swarm.connect(ipfs3Addr+"/p2p/"+ipfs3.peerId.id)
+      await ipfs2.swarm.connect(ipfs3Addr+"/p2p/"+ipfs3.peerId.id)
     })
 
     afterEach(async () => {

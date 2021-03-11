@@ -32,7 +32,7 @@ module.exports = (common, options) => {
       peers = await ipfsA.swarm.peers()
       expect(peers).to.have.length(0)
 
-      await ipfsA.swarm.connect(ipfsB.peerId.addresses[0])
+      await ipfsA.swarm.connect(ipfsB.peerId.addresses[0]+"/p2p/"+ipfsB.peerId.id)
 
       peers = await ipfsA.swarm.peers()
       expect(peers).to.have.length.above(0)

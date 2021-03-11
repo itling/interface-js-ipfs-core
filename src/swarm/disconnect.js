@@ -23,7 +23,7 @@ module.exports = (common, options) => {
       ipfsA = (await common.spawn()).api
       // webworkers are not dialable because webrtc is not available
       ipfsB = (await common.spawn({ type: isWebWorker ? 'go' : undefined })).api
-      await ipfsA.swarm.connect(ipfsB.peerId.addresses[0])
+      await ipfsA.swarm.connect(ipfsB.peerId.addresses[0]+"/p2p/"+ipfsB.peerId.id)
     })
 
     after(() => common.clean())
@@ -34,7 +34,7 @@ module.exports = (common, options) => {
       peers = await ipfsA.swarm.peers()
       expect(peers).to.have.length.above(0)
 
-      await ipfsA.swarm.disconnect(ipfsB.peerId.addresses[0])
+      await ipfsA.swarm.disconnect(ipfsB.peerId.addresses[0]+"/p2p/"+ipfsB.peerId.id)
 
       peers = await ipfsA.swarm.peers()
       expect(peers).to.have.length(0)

@@ -22,7 +22,7 @@ module.exports = (common, options) => {
     before(async () => {
       ipfs = (await common.spawn()).api
       const nodeB = (await common.spawn()).api
-      await ipfs.swarm.connect(nodeB.peerId.addresses[0])
+      await ipfs.swarm.connect(nodeB.peerId.addresses[0]+"/p2p/"+nodeB.peerId.id)
     })
 
     after(() => common.clean())

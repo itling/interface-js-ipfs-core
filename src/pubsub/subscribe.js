@@ -159,7 +159,7 @@ module.exports = (common, options) => {
         const ipfs2Addr = ipfs2.peerId.addresses
           .find(ma => ma.nodeAddress().address === '127.0.0.1')
 
-        return ipfs1.swarm.connect(ipfs2Addr)
+        return ipfs1.swarm.connect(ipfs2Addr+"/p2p/"+ipfs2.peerId.id)
       })
 
       it('should receive messages from a different node', async () => {

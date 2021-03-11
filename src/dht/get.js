@@ -22,7 +22,7 @@ module.exports = (common, options) => {
     before(async () => {
       nodeA = (await common.spawn()).api
       nodeB = (await common.spawn()).api
-      await nodeA.swarm.connect(nodeB.peerId.addresses[0])
+      await nodeA.swarm.connect(nodeB.peerId.addresses[0]+"/p2p/"+nodeB.peerId.id)
     })
 
     after(() => common.clean())
